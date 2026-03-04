@@ -9,6 +9,7 @@ export const RESUME = {
   email: "031mdsalman@gmail.com",
   github: "github.com/mdsalman031",
   linkedin: "linkedin.com/in/mdsalman315/",
+  leetcode: "leetcode.com/u/MD_Salman_315/",
   education: [
     {
       degree: "B.E. in Computer Science",
@@ -40,7 +41,7 @@ export const RESUME = {
       description:
         "Built an AI-driven platform that converts YouTube lectures into structured learning material including notes, quizzes, flashcards, and key frames. Integrated transcript extraction, GenAI-based content generation, and a contextual chatbot for Q&A.",
       tech: ["React.js", "Tailwind CSS", "FastAPI", "Python", "Whisper", "Together.ai", "Google Forms API"],
-      github: "#",
+      github: "https://github.com/mdsalman031/vidnote-ai",
       highlight: "Best Project Award",
       color: "#00f5d4",
     },
@@ -50,7 +51,7 @@ export const RESUME = {
       description:
         "Developed a user-friendly college website from scratch using React.js and Bootstrap. Integrated event calendars, portals, and social media links with a Node.js + MongoDB backend.",
       tech: ["React.js", "Node.js", "Express.js", "MongoDB"],
-      github: "#",
+      github: "https://github.com/mdsalman031/College-Website",
       color: "#f72585",
     },
     {
@@ -59,7 +60,7 @@ export const RESUME = {
       description:
         "Built a dynamic book catalog with search, inventory management, ratings, and secure login using React.js and FastAPI with SQLite.",
       tech: ["React.js", "FastAPI", "SQLite"],
-      github: "#",
+      github: "https://github.com/mdsalman031/Book-Catalogue",
       highlight: "Best Project – CBIT Bootcamp 2024",
       color: "#7209b7",
     },
@@ -86,6 +87,7 @@ export const RESUME = {
       year: "2025",
       rarity: "Rare",
       color: "#00ed64",
+      link: "https://www.credly.com/badges/73f624ea-aec0-4ed9-9f22-7b470b4a3b51/public_url",
     },
     {
       id: "oracle",
@@ -94,6 +96,7 @@ export const RESUME = {
       year: "2025",
       rarity: "Rare",
       color: "#f80000",
+      link: "https://catalog-education.oracle.com/ords/certview/sharebadge?id=4654F460C6071F168BC928CDDB18930BDF22EC16C31A5B9F42B1589D2472654C",
     },
     {
       id: "nptel",
@@ -102,6 +105,7 @@ export const RESUME = {
       year: "2024",
       rarity: "Epic",
       color: "#f5a623",
+      link: "https://drive.google.com/file/d/1zVy4rylmUuDQMpUxFEQqdBH_E9heGYFu/view",
     },
     {
       id: "bestproject",
@@ -110,6 +114,7 @@ export const RESUME = {
       year: "2024",
       rarity: "Legendary",
       color: "#ffd700",
+      link: "https://github.com/mdsalman031/Book-Catalogue",
     },
     {
       id: "leetcode",
@@ -118,6 +123,7 @@ export const RESUME = {
       year: "2024",
       rarity: "Epic",
       color: "#f5a623",
+      link: "https://leetcode.com/u/MD_Salman_315/",
     },
   ],
 };

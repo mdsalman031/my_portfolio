@@ -7,23 +7,22 @@ function AchievementBadge({ achievement, unlocked }) {
   const col = RARITY_COLORS[achievement.rarity];
   const colorRgb = col === "#ffd700" ? "255,215,0" : col === "#f5a623" ? "245,166,35" : "76,201,240";
 
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? `rgba(${colorRgb},0.08)` : "rgba(255,255,255,0.02)",
-        border: `2px solid ${hovered ? `${col}80` : "rgba(255,255,255,0.06)"}`,
-        borderRadius: "16px",
-        padding: "24px 20px",
-        textAlign: "center",
-        transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
-        transform: hovered ? "translateY(-4px) scale(1.03)" : "none",
-        boxShadow: hovered ? `0 16px 40px ${col}25` : "none",
-        filter: unlocked ? "none" : "grayscale(1) opacity(0.35)",
-        cursor: "pointer",
-      }}
-    >
+  const cardStyle = {
+    background: hovered ? `rgba(${colorRgb},0.08)` : "rgba(255,255,255,0.02)",
+    border: `2px solid ${hovered ? `${col}80` : "rgba(255,255,255,0.06)"}`,
+    borderRadius: "16px",
+    padding: "24px 20px",
+    textAlign: "center",
+    transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
+    transform: hovered ? "translateY(-4px) scale(1.03)" : "none",
+    boxShadow: hovered ? `0 16px 40px ${col}25` : "none",
+    filter: unlocked ? "none" : "grayscale(1) opacity(0.35)",
+    cursor: "pointer",
+    textDecoration: "none",
+  };
+
+  const content = (
+    <>
       <div
         style={{
           fontSize: "2.5rem",
@@ -64,6 +63,31 @@ function AchievementBadge({ achievement, unlocked }) {
         {achievement.title}
       </p>
       <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>{achievement.year}</p>
+    </>
+  );
+
+  if (achievement.link) {
+    return (
+      <a
+        href={achievement.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={cardStyle}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={cardStyle}
+    >
+      {content}
     </div>
   );
 }

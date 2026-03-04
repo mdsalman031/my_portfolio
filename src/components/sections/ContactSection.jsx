@@ -11,6 +11,7 @@ export default function ContactSection() {
     { label: "Email", value: RESUME.email, href: `mailto:${RESUME.email}`, icon: "📧", color: "#00f5d4" },
     { label: "GitHub", value: RESUME.github, href: `https://${RESUME.github}`, icon: "🐙", color: "#f72585" },
     { label: "LinkedIn", value: RESUME.linkedin, href: `https://${RESUME.linkedin}`, icon: "💼", color: "#7209b7" },
+    { label: "LeetCode", value: "MD_Salman_315", href: `https://${RESUME.leetcode}`, icon: "⚡", color: "#ffd700" },
   ];
 
   const handleSubmit = async (e) => {
