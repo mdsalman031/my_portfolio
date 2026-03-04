@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LEVEL_TITLES, MAX_LEVEL, MISSIONS, XP_PER_LEVEL } from "./data/portfolioData";
 import { getLevel } from "./utils/gameUtils";
 import Confetti from "./components/common/Confetti";
@@ -33,7 +33,77 @@ export default function PortfolioApp() {
   });
   const [toast, setToast] = useState({ message: "", visible: false });
   const [activeSection, setActiveSection] = useState("hero");
-  const [soundOn, setSoundOn] = useState(false);
+  const [soundOn, setSoundOn] = useState(() => {
+    try {
+      return localStorage.getItem("portfolio_sound") === "on";
+    } catch {
+      return false;
+    }
+  });
+  const audioCtxRef = useRef(null);
+
+  const getAudioContext = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    if (!audioCtxRef.current) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtxRef.current = new Ctx();
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  const playTone = useCallback(
+    async (frequency, duration = 0.1, type = "sine", volume = 0.07) => {
+      if (!soundOn) return;
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === "suspended") {
+        try {
+          await ctx.resume();
+        } catch {
+          return;
+        }
+      }
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    },
+    [getAudioContext, soundOn]
+  );
+
+  const playPattern = useCallback(
+    async (notes) => {
+      for (const note of notes) {
+        // eslint-disable-next-line no-await-in-loop
+        await playTone(note.f, note.d, note.t, note.v);
+        // tiny separation between notes
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, (note.d || 0.1) * 1000 * 0.7));
+      }
+    },
+    [playTone]
+  );
+
+  const showToast = useCallback((msg) => {
+    setToast({ message: msg, visible: true });
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+  }, []);
+
+  const addXp = useCallback((amount) => {
+    setXp((prev) => Math.min(prev + amount, XP_PER_LEVEL * MAX_LEVEL));
+  }, []);
 
   useEffect(() => {
     try {
@@ -45,9 +115,14 @@ export default function PortfolioApp() {
       setLevel(newLevel);
       setShowConfetti(true);
       showToast(`🎉 LEVEL UP! You are now Level ${newLevel} — ${LEVEL_TITLES[newLevel - 1]}`);
+      playPattern([
+        { f: 523, d: 0.08, t: "triangle", v: 0.04 },
+        { f: 659, d: 0.08, t: "triangle", v: 0.04 },
+        { f: 784, d: 0.12, t: "triangle", v: 0.05 },
+      ]);
       setTimeout(() => setShowConfetti(false), 4000);
     }
-  }, [xp, level]);
+  }, [level, playPattern, showToast, xp]);
 
   useEffect(() => {
     try {
@@ -55,14 +130,40 @@ export default function PortfolioApp() {
     } catch {}
   }, [unlockedMissions]);
 
-  const showToast = useCallback((msg) => {
-    setToast({ message: msg, visible: true });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
-  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("portfolio_sound", soundOn ? "on" : "off");
+    } catch {}
+  }, [soundOn]);
 
-  const addXp = useCallback((amount) => {
-    setXp((prev) => Math.min(prev + amount, XP_PER_LEVEL * MAX_LEVEL));
-  }, []);
+  useEffect(() => {
+    if (!soundOn) return undefined;
+
+    const onPointerDown = async () => {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === "suspended") {
+        try {
+          await ctx.resume();
+        } catch {}
+      }
+    };
+
+    const onDocumentClick = (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const clickable = target.closest("button, a, [role='button']");
+      if (!clickable) return;
+      playTone(520, 0.045, "triangle", 0.04);
+    };
+
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    document.addEventListener("click", onDocumentClick);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("click", onDocumentClick);
+    };
+  }, [getAudioContext, playTone, soundOn]);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -106,6 +207,7 @@ export default function PortfolioApp() {
             setUnlockedMissions((prev) => new Set([...prev, mission.id]));
             addXp(mission.xpReward);
             showToast(`✦ ${mission.name} unlocked! +${mission.xpReward} XP`);
+            playTone(660, 0.09, "square", 0.06);
           }
         },
         { threshold: 0.3 }
@@ -116,14 +218,17 @@ export default function PortfolioApp() {
     });
 
     return () => observers.forEach((o) => o && o.disconnect());
-  }, [addXp, showToast, unlockedMissions]);
+  }, [addXp, playTone, showToast, unlockedMissions]);
 
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleBegin = () => scrollTo("about");
+  const handleBegin = () => {
+    playTone(440, 0.06, "triangle", 0.06);
+    scrollTo("about");
+  };
 
   return (
     <>
@@ -135,7 +240,33 @@ export default function PortfolioApp() {
       <Toast message={toast.message} visible={toast.visible} />
 
       <button
-        onClick={() => setSoundOn((v) => !v)}
+        onClick={async () => {
+          const next = !soundOn;
+          setSoundOn(next);
+          if (next) {
+            const ctx = getAudioContext();
+            if (ctx && ctx.state === "suspended") {
+              try {
+                await ctx.resume();
+              } catch {}
+            }
+            const nowCtx = getAudioContext();
+            if (nowCtx) {
+              const now = nowCtx.currentTime;
+              const osc = nowCtx.createOscillator();
+              const gain = nowCtx.createGain();
+              osc.type = "triangle";
+              osc.frequency.setValueAtTime(740, now);
+              gain.gain.setValueAtTime(0.0001, now);
+              gain.gain.exponentialRampToValueAtTime(0.045, now + 0.01);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+              osc.connect(gain);
+              gain.connect(nowCtx.destination);
+              osc.start(now);
+              osc.stop(now + 0.11);
+            }
+          }
+        }}
         title={soundOn ? "Sound On" : "Sound Off"}
         style={{
           position: "fixed",
@@ -161,6 +292,7 @@ export default function PortfolioApp() {
 
       <button
         onClick={() => {
+          playTone(180, 0.09, "sawtooth", 0.05);
           setXp(0);
           setLevel(1);
           setUnlockedMissions(new Set());
