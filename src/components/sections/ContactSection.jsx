@@ -4,6 +4,8 @@ import { RESUME } from "../../data/portfolioData";
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState({ type: "", text: "" });
 
   const links = [
     { label: "Email", value: RESUME.email, href: `mailto:${RESUME.email}`, icon: "📧", color: "#00f5d4" },
@@ -11,23 +13,38 @@ export default function ContactSection() {
     { label: "LinkedIn", value: RESUME.linkedin, href: `https://${RESUME.linkedin}`, icon: "💼", color: "#7209b7" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const subjectRaw = `Portfolio Inquiry from ${form.name}`;
-    const bodyRaw =
-      `Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}`
-    ;
-
-    const subject = encodeURIComponent(subjectRaw);
-    const body = encodeURIComponent(bodyRaw);
-    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-      RESUME.email
-    )}&su=${subject}&body=${body}`;
-
+    setSending(true);
+    setStatus({ type: "", text: "" });
     try {
-      window.open(gmailComposeUrl, "_blank", "noopener,noreferrer");
+      const response = await fetch(`https://formsubmit.co/ajax/${RESUME.email}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          message: form.message,
+          _subject: `Portfolio Inquiry from ${form.name}`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      setStatus({ type: "success", text: "Message sent successfully." });
+      setForm({ name: "", email: "", message: "" });
     } catch {
-      window.location.href = `mailto:${RESUME.email}?subject=${subject}&body=${body}`;
+      setStatus({
+        type: "error",
+        text: "Unable to send right now. Please email me directly at 031mdsalman@gmail.com.",
+      });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -178,6 +195,7 @@ export default function ContactSection() {
 
           <button
             type="submit"
+            disabled={sending}
             style={{
               justifySelf: "start",
               fontFamily: "'Orbitron', sans-serif",
@@ -189,11 +207,24 @@ export default function ContactSection() {
               borderRadius: "8px",
               color: "#000",
               fontWeight: 800,
-              cursor: "pointer",
+              cursor: sending ? "not-allowed" : "pointer",
+              opacity: sending ? 0.7 : 1,
             }}
           >
-            SEND MESSAGE
+            {sending ? "SENDING..." : "SEND MESSAGE"}
           </button>
+
+          {status.text ? (
+            <div
+              style={{
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: "11px",
+                color: status.type === "success" ? "#00f5d4" : "#f72585",
+              }}
+            >
+              {status.text}
+            </div>
+          ) : null}
         </form>
       </div>
     </Section>
